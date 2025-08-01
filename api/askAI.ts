@@ -1,44 +1,41 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import fetch from 'node-fetch';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-    }
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-  const { question } = req.body;
-  if (!question) {
-    return res.status(400).json({ error: 'Missing question' });
+  if (!GROQ_API_KEY) {
+    return res.status(500).json({ error: "Missing GROQ_API_KEY in environment" });
+  }
+
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: "Missing 'message' in request body" });
   }
 
   try {
-    const apiRes = await fetch('https://api.together.xyz/v1/chat/completions', {
-      method: 'POST',
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.TOGETHER_API_KEY}`,
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+        model: "llama3-70b-8192",
         messages: [
-          { role: 'system', content: 'You are a crypto investment assistant.' },
-          { role: 'user', content: question },
+          { role: "system", content: "You are a helpful assistant specializing in crypto investing." },
+          { role: "user", content: message },
         ],
-        max_tokens: 300,
         temperature: 0.7,
       }),
     });
 
-    const data = await apiRes.json();
-    if (!apiRes.ok) {
-      console.error('Together API error:', data);
-      return res.status(apiRes.status).json({ error: data.error || 'Together.ai error' });
-    }
+    const data = await groqRes.json();
 
-    const aiResponse = data.choices?.[0]?.message?.content ?? 'No response.';
-    return res.status(200).json({ message: aiResponse });
-  } catch (err) {
-    console.error('API error:', err);
-    return res.status(500).json({ error: 'Failed to connect to Together.ai' });
+    const reply = data?.choices?.[0]?.message?.content;
+    res.status(200).json({ reply });
+  } catch (error) {
+    console.error("Groq API error:", error);
+    res.status(500).json({ error: "Groq API call failed" });
   }
 }
