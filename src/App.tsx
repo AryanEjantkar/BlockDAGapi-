@@ -1,53 +1,45 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Walletsend from "./Walletsend"; // note the lowercase 's'
+import GroqAssistant from "./components/groqAssistant";
 
-function App() {
-  const [response, setResponse] = useState("");
-  const [status, setStatus] = useState("");
+const App: React.FC = () => {
+  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [walletType, setWalletType] = useState<"metamask" | "phantom" | null>(null);
 
-  const askGroqAssistant = async () => {
-    setStatus("Asking Assistant...");
-    setResponse("");
+  const [darkMode, setDarkMode] = useState(true);
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
-    try {
-      const res = await fetch("/api/askAI", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: "Give advice on improving my crypto investment strategy.",
-        }),
-      });
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
 
-      const data = await res.json();
-      setResponse(data.reply || "No response from AI.");
-      setStatus("✅ Response received");
-    } catch (error) {
-      console.error("Error calling Groq AI:", error);
-      setStatus("❌ AI call failed");
-    }
-  };
+  // Add wallet connection logic here to update walletAddress and walletType as needed
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4">
-      <h1 className="text-3xl font-bold mb-6">KryptaNator: Crypto Assistant</h1>
+    <div className={`${darkMode ? "dark" : ""}`}>
+      <div className="min-h-screen bg-gray-950 text-white p-6 flex flex-col items-center">
+        <div className="w-full max-w-4xl">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-4xl font-bold text-purple-400">KryptaNator</h1>
+            <button
+              onClick={toggleDarkMode}
+              className="bg-zinc-800 hover:bg-zinc-700 text-sm text-white px-4 py-2 rounded-xl"
+            >
+              {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+            </button>
+          </div>
 
-      <button
-        onClick={askGroqAssistant}
-        className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl mb-6"
-      >
-        Ask Assistant
-      </button>
+          <Walletsend
+            walletAddress={walletAddress}
+            walletType={walletType}
+            setStatus={() => {}}
+          />
 
-      {status && <p className="text-sm text-gray-400 mb-2">{status}</p>}
-
-      {response && (
-        <div className="w-full max-w-2xl p-4 bg-gray-800 rounded-xl shadow text-green-300 whitespace-pre-wrap">
-          {response}
+          <GroqAssistant />
         </div>
-      )}
+      </div>
     </div>
   );
-}
+};
 
 export default App;
