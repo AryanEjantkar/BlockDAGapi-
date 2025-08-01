@@ -1,136 +1,78 @@
-import React, { useState } from "react";
-import { ethers } from "ethers";
-import {
-  Connection,
-  PublicKey,
-  clusterApiUrl,
-  Transaction,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
-} from "@solana/web3.js";
+import React from "react";
 
-declare global {
-  interface Window {
-    ethereum?: any;
-    phantom?: {
-      solana?: any;
-    };
-  }
-}
+type WalletType = "metamask" | "phantom" | null;
 
-interface WalletSendProps {
+interface WalletsendProps {
   walletAddress: string;
-  walletType: "metamask" | "phantom" | "rabby" | null;
-  setStatus?: React.Dispatch<React.SetStateAction<string>>;
+  walletType: WalletType;
+  setWalletAddress: (address: string) => void;
+  setWalletType: (type: WalletType) => void;
+  setStatus: (msg: string) => void;
 }
 
-const WalletSend: React.FC<WalletSendProps> = ({
+const Walletsend: React.FC<WalletsendProps> = ({
   walletAddress,
   walletType,
+  setWalletAddress,
+  setWalletType,
   setStatus,
 }) => {
-  const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState("");
+  // Simulate wallet connection functions
 
-  const sendTransaction = async () => {
-    if (!walletAddress || !walletType) {
-      setStatus && setStatus("Please connect your wallet first.");
-      return;
-    }
-    if (!recipient || !amount) {
-      setStatus && setStatus("Please enter recipient address and amount.");
-      return;
-    }
+  const connectMetamask = async () => {
+    // Simulated logic to connect MetaMask wallet
+    setWalletAddress("0xMetaMaskFakeAddress123");
+    setWalletType("metamask");
+    setStatus("Connected to MetaMask");
+  };
 
-    setStatus && setStatus("Sending transaction...");
+  const connectPhantom = async () => {
+    // Simulated logic to connect Phantom wallet
+    setWalletAddress("PhantomFakeAddress456");
+    setWalletType("phantom");
+    setStatus("Connected to Phantom");
+  };
 
-    try {
-      if (walletType === "metamask" || walletType === "rabby") {
-        if (!window.ethereum) {
-          setStatus && setStatus("Ethereum wallet not detected.");
-          return;
-        }
-
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-
-        const tx = await signer.sendTransaction({
-          to: recipient,
-          value: ethers.parseEther(amount),
-        });
-
-        setStatus && setStatus(`Transaction sent! Hash: ${tx.hash}`);
-
-        const receipt = await tx.wait();
-        if (receipt) {
-          setStatus && setStatus(`Transaction confirmed! Hash: ${receipt.hash}`);
-        } else {
-          setStatus && setStatus("Transaction sent, but no confirmation received.");
-        }
-      } else if (walletType === "phantom") {
-        const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-        const fromPubkey = new PublicKey(walletAddress);
-        const toPubkey = new PublicKey(recipient);
-
-        const transaction = new Transaction().add(
-          SystemProgram.transfer({
-            fromPubkey,
-            toPubkey,
-            lamports: Math.floor(parseFloat(amount) * LAMPORTS_PER_SOL),
-          })
-        );
-
-        transaction.feePayer = fromPubkey;
-        const { blockhash } = await connection.getLatestBlockhash("finalized");
-        transaction.recentBlockhash = blockhash;
-
-        if (
-          window.phantom?.solana?.signTransaction &&
-          typeof window.phantom.solana.signTransaction === "function"
-        ) {
-          const signed = await window.phantom.solana.signTransaction(transaction);
-          const sig = await connection.sendRawTransaction(signed.serialize());
-          await connection.confirmTransaction(sig, "confirmed");
-          setStatus && setStatus(`Transaction confirmed! Signature: ${sig}`);
-        } else {
-          setStatus && setStatus("Phantom wallet not available or unable to sign.");
-        }
-      } else {
-        setStatus && setStatus("Unsupported wallet type.");
-      }
-    } catch (error: any) {
-      setStatus && setStatus(`Transaction failed: ${error.message || error}`);
-    }
+  const disconnectWallet = () => {
+    setWalletAddress("");
+    setWalletType(null);
+    setStatus("Disconnected wallet");
   };
 
   return (
-    <div className="flex flex-col space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-md mx-auto">
-      <input
-        type="text"
-        placeholder="Recipient Address"
-        value={recipient}
-        onChange={(e) => setRecipient(e.target.value)}
-        className="w-full px-4 py-2 border rounded-md dark:bg-gray-700 dark:text-white dark:border-gray-600"
-      />
-      <input
-        type="number"
-        placeholder="Amount"
-        min="0"
-        step="any"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        className="w-full px-4 py-2 border rounded-md dark:bg-gray-700 dark:text-white dark:border-gray-600"
-      />
-      <button
-        onClick={sendTransaction}
-        className="bg-green-600 hover:bg-green-700 text-white py-2 rounded-md font-semibold"
-      >
-        Send
-      </button>
+    <div className="p-4 bg-zinc-800 rounded-lg mb-6">
+      <h2 className="text-xl mb-2">Wallet Connection</h2>
+      {walletAddress ? (
+        <div>
+          <p>
+            Connected wallet: <strong>{walletType}</strong>
+          </p>
+          <p>Address: {walletAddress}</p>
+          <button
+            onClick={disconnectWallet}
+            className="mt-2 bg-red-600 px-4 py-2 rounded"
+          >
+            Disconnect
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-4">
+          <button
+            onClick={connectMetamask}
+            className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Connect MetaMask
+          </button>
+          <button
+            onClick={connectPhantom}
+            className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700"
+          >
+            Connect Phantom
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default WalletSend;
+export default Walletsend;

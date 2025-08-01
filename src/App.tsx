@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import Walletsend from "./Walletsend"; // note the lowercase 's'
+import Walletsend from "./Walletsend";
 import GroqAssistant from "./components/groqAssistant";
 
 const App: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [walletType, setWalletType] = useState<"metamask" | "phantom" | null>(null);
+  const [status, setStatus] = useState<string>("");
 
   const [darkMode, setDarkMode] = useState(true);
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
@@ -12,8 +13,6 @@ const App: React.FC = () => {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
-
-  // Add wallet connection logic here to update walletAddress and walletType as needed
 
   return (
     <div className={`${darkMode ? "dark" : ""}`}>
@@ -32,8 +31,16 @@ const App: React.FC = () => {
           <Walletsend
             walletAddress={walletAddress}
             walletType={walletType}
-            setStatus={() => {}}
+            setWalletAddress={setWalletAddress}
+            setWalletType={setWalletType}
+            setStatus={setStatus}
           />
+
+          {status && (
+            <div className="bg-zinc-700 p-2 mb-4 rounded text-sm">
+              <strong>Status:</strong> {status}
+            </div>
+          )}
 
           <GroqAssistant />
         </div>
