@@ -1,13 +1,13 @@
 {
   "name": "aiwalletassistant",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@solana/wallet-adapter-base": "^0.9.27",
@@ -45,6 +45,6 @@
     "rollup-plugin-node-polyfills": "^0.2.1",
     "tailwindcss": "3.4.1",
     "typescript": "^5.8.3",
-    "vite": "^7.0.2"
+    "vite": "^7.0.6"
   }
 }
